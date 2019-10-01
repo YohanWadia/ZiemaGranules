@@ -21,7 +21,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".MyBroadcastRecieverver" >
+        <receiver android:name=".MyBroadcastReciever" >
                     </receiver>
     </application>
 

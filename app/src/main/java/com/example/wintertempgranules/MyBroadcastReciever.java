@@ -4,13 +4,19 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
-import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,6 +29,9 @@ import java.util.Date;
 public class MyBroadcastReciever extends BroadcastReceiver {
 
     Context ctx;
+    String monthName;
+    int day,hr;
+    DatabaseReference seqRef,weekRef;
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -37,48 +46,110 @@ public class MyBroadcastReciever extends BroadcastReceiver {
         Date d = new Date();
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
-        String monthName = new SimpleDateFormat("MMM").format(cal.getTime());
-        int day = cal.get(Calendar.DAY_OF_MONTH);
-        int hr = cal.get(Calendar.HOUR_OF_DAY);
+        monthName = new SimpleDateFormat("MMM").format(cal.getTime());
+        day = cal.get(Calendar.DAY_OF_MONTH);
+        hr = cal.get(Calendar.HOUR_OF_DAY);
         Log.e("******","Ans: " + monthName);
         Log.e("******","Day: " + day + " | Week: " + day/7);
         Log.e("******","Hour: " + hr);
+    }
 
+    private void tempSequence(Float temp){
         if ((hr>6) && (hr<19)){
+            String SeqStr = "Winter/" + monthName + "/SeqDay";
+            seqRef = FirebaseDatabase.getInstance().getReference(SeqStr);
             if(hr==7){
-
-                //write DaySequence directly cz it is a new day
+                seqRef.setValue(temp);
             }
-            else if(hr==10){
-
-                //read DaySequence and concatenate new temp with ,
-
-            }
-            else if(hr==13){
-
-                //read DaySequence and concatenate new temp with ,
+            else if((hr==10)|| (hr==13)){
+                //actionNeeded="readwrite";//read...put , and write after concat
+                readWriteSeq(seqRef,false,temp,null,null);
             }
             else if(hr==16){
-                //read DaySequence and concatenate new temp ... but no ,
-                //split & divide by 4
-                if((day/7)<=1){ weekStuff("Week1","day");}
-                else if((day/7)<=2){ weekStuff("Week2","day");}
-                else if((day/7)<=3){ weekStuff("Week3","day");}
-                else { weekStuff("Week4","day");}
+                if((day/7)<=1){readWriteSeq(seqRef,true,temp,"Week1","day");}
+                else if((day/7)<=2){ readWriteSeq(seqRef,true,temp,"Week2","day");}
+                else if((day/7)<=3){ readWriteSeq(seqRef,true,temp,"Week3","day");}
+                else { readWriteSeq(seqRef,true,temp,"Week4","day");}
+
             }
 
         }
         else{
+            String SeqStr = "Winter/" + monthName + "/SeqNight";
+            seqRef = FirebaseDatabase.getInstance().getReference(SeqStr);
             if(hr==19){
-                //make temp DaySequence= null
+                seqRef.setValue(temp);
+            }
+            else if((hr==22)|| (hr==1)){
+                //actionNeeded="readwrite";//read...put , and write after concat
+                readWriteSeq(seqRef,false,temp,null,null);
+            }
+            else if(hr==4){
+                if((day/7)<=1){readWriteSeq(seqRef,true,temp,"Week1","night");}
+                else if((day/7)<=2){ readWriteSeq(seqRef,true,temp,"Week2","night");}
+                else if((day/7)<=3){ readWriteSeq(seqRef,true,temp,"Week3","night");}
+                else { readWriteSeq(seqRef,true,temp,"Week4","night");}
+
             }
         }
     }
 
-    private void weekStuff(String week, String when) {
-        //make ref with week/when and read value
-        //keep if val exists.. add to present temp & div by 2 to get avg.
-        //then save back to that path
+    private void readWriteSeq(final DatabaseReference seqRef, final boolean lastTemp, final Float temp, final String week, final String time) {
+
+            seqRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    String str = dataSnapshot.getValue(String.class);
+                    seqRef.setValue(str + "," + temp);
+                    if(lastTemp) {
+                        String[] splitz = str.split(",");
+                        float sum=0.0f;
+                        for(String t : splitz){
+                            sum += Float.valueOf(t);
+                        }
+                        sum = sum + temp;
+                        float avg = sum/4;
+                        weekStuff(week,time,avg);
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+
+    }
+
+    private void weekStuff(String week, String time, final Float avg) {
+        String str = "Winter/" + monthName + "/" + week  + "/" + time ;
+        weekRef = FirebaseDatabase.getInstance().getReference(str);
+        weekRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()){
+                    Float f = dataSnapshot.getValue(Float.class);
+                    Float ans = (f+avg)/2;
+
+                    DecimalFormat df = new DecimalFormat("#.#");
+                    String ansStr = df.format(ans);//decimalFormatter always returns a String
+
+                    weekRef.setValue(Float.valueOf(ansStr));
+                }
+                else {
+                    DecimalFormat df = new DecimalFormat("#.#");
+                    String ansStr = df.format(avg);//decimalFormatter always returns a String
+
+                    weekRef.setValue(Float.valueOf(ansStr));
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
 
     }
 
@@ -111,7 +182,8 @@ public class MyBroadcastReciever extends BroadcastReceiver {
                     //temp = "-24.58";//= -24.6... anything with even .5 is rounded down to the lower value, but in -ve that is the higher val
                     DecimalFormat df = new DecimalFormat("#.#");
                     Float tempVal = Float.valueOf(temp);
-                    temp = df.format(tempVal);
+                    temp = df.format(tempVal);//decimalFormatter always returns a String
+                    tempSequence(Float.valueOf(temp));
                     Log.e("MAIN", "temp: " + temp + "°C");
 
                     Log.e("XXXXX", "xxxxxxxxxxxxxxxxxx");

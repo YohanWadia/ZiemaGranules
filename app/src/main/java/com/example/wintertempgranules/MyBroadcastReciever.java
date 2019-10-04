@@ -28,9 +28,9 @@ public class MyBroadcastReciever extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.e("RECIEVER", "Alarm =========");
         ctx = context;
-        doDateStuff();
-        callWebService();
-        //Log.e("RECIEVER", "xxxxxxxxx");
+        //doDateStuff();
+        //callWebService();
+        Log.e("RECIEVER", "xxxxxxxxx");
     }
 
     private void doDateStuff() {

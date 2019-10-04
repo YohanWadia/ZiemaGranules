@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">WinterTempGranules</string>
+
+    <array name="months">
+        <item>Oct</item>
+        <item>Sep</item>
+        <item>Nov</item>
+        <item>Dec</item>
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+
+    </array>
 </resources>

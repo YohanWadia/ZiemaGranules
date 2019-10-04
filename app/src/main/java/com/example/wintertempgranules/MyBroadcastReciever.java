@@ -55,17 +55,19 @@ public class MyBroadcastReciever extends BroadcastReceiver {
     }
 
     private void tempSequence(Float temp){
-        if ((hr>6) && (hr<19)){
+        Log.e("MAIN", "temp reveived " + temp + "°C");
+
+        if ((hr>7) && (hr<18)){
             String SeqStr = "Winter/" + monthName + "/SeqDay";
             seqRef = FirebaseDatabase.getInstance().getReference(SeqStr);
-            if(hr==7){
-                seqRef.setValue(temp);
+            if(hr==8){
+                seqRef.setValue(String.valueOf(temp));
             }
-            else if((hr==10)|| (hr==13)){
+            else if((hr==11)|| (hr==14)){
                 //actionNeeded="readwrite";//read...put , and write after concat
                 readWriteSeq(seqRef,false,temp,null,null);
             }
-            else if(hr==16){
+            else if(hr==17){
                 if((day/7)<=1){readWriteSeq(seqRef,true,temp,"Week1","day");}
                 else if((day/7)<=2){ readWriteSeq(seqRef,true,temp,"Week2","day");}
                 else if((day/7)<=3){ readWriteSeq(seqRef,true,temp,"Week3","day");}
@@ -77,14 +79,14 @@ public class MyBroadcastReciever extends BroadcastReceiver {
         else{
             String SeqStr = "Winter/" + monthName + "/SeqNight";
             seqRef = FirebaseDatabase.getInstance().getReference(SeqStr);
-            if(hr==19){
-                seqRef.setValue(temp);
+            if(hr==20){
+                seqRef.setValue(String.valueOf(temp));
             }
-            else if((hr==22)|| (hr==1)){
+            else if((hr==23)|| (hr==2)){
                 //actionNeeded="readwrite";//read...put , and write after concat
                 readWriteSeq(seqRef,false,temp,null,null);
             }
-            else if(hr==4){
+            else if(hr==5){
                 if((day/7)<=1){readWriteSeq(seqRef,true,temp,"Week1","night");}
                 else if((day/7)<=2){ readWriteSeq(seqRef,true,temp,"Week2","night");}
                 else if((day/7)<=3){ readWriteSeq(seqRef,true,temp,"Week3","night");}

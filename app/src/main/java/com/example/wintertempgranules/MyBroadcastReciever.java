@@ -68,9 +68,9 @@ public class MyBroadcastReciever extends BroadcastReceiver {
                 readWriteSeq(seqRef,false,temp,null,null);
             }
             else if(hr==17){
-                if((day/7)<=1){readWriteSeq(seqRef,true,temp,"Week1","day");}
-                else if((day/7)<=2){ readWriteSeq(seqRef,true,temp,"Week2","day");}
-                else if((day/7)<=3){ readWriteSeq(seqRef,true,temp,"Week3","day");}
+                if((day/7)<1){readWriteSeq(seqRef,true,temp,"Week1","day");}
+                else if((day/7)<2){ readWriteSeq(seqRef,true,temp,"Week2","day");}
+                else if((day/7)<3){ readWriteSeq(seqRef,true,temp,"Week3","day");}
                 else { readWriteSeq(seqRef,true,temp,"Week4","day");}
 
             }
@@ -87,9 +87,9 @@ public class MyBroadcastReciever extends BroadcastReceiver {
                 readWriteSeq(seqRef,false,temp,null,null);
             }
             else if(hr==5){
-                if((day/7)<=1){readWriteSeq(seqRef,true,temp,"Week1","night");}
-                else if((day/7)<=2){ readWriteSeq(seqRef,true,temp,"Week2","night");}
-                else if((day/7)<=3){ readWriteSeq(seqRef,true,temp,"Week3","night");}
+                if((day/7)<1){readWriteSeq(seqRef,true,temp,"Week1","night");}
+                else if((day/7)<2){ readWriteSeq(seqRef,true,temp,"Week2","night");}
+                else if((day/7)<3){ readWriteSeq(seqRef,true,temp,"Week3","night");}
                 else { readWriteSeq(seqRef,true,temp,"Week4","night");}
 
             }

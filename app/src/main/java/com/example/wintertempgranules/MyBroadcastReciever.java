@@ -28,105 +28,139 @@ import java.util.Date;
 
 public class MyBroadcastReciever extends BroadcastReceiver {
 
+    String TAG = "BroadCast";
+
     Context ctx;
     String monthName;
     int day,hr;
+
+    String[] arrMonth = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
+    int monthIndex;
+
+    String[] arrWeek = {"Week1","Week2","Week3","Week4"};
+    int weekIndex;
+
+    String work;//write... read,write... update
+
     DatabaseReference seqRef,weekRef;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.e("RECIEVER", "Alarm =========");
         ctx = context;
+        work="";//to avoid null pointer on update
+
         doDateStuff();
+        makeCorrectRef();
         callWebService();
+        //doWork(1.5f);
         Log.e("RECIEVER", "xxxxxxxxx");
     }
+
 
     private void doDateStuff() {
         Date d = new Date();
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
         monthName = new SimpleDateFormat("MMM").format(cal.getTime());
+        monthIndex = cal.get(Calendar.MONTH);
+
         day = cal.get(Calendar.DAY_OF_MONTH);
+        weekIndex = (day/7>3)? 3 : (day/7) ;
+
         hr = cal.get(Calendar.HOUR_OF_DAY);
-        Log.e("******","Ans: " + monthName);
-        Log.e("******","Day: " + day + " | Week: " + day/7);
+
+        Log.e("******","Month: " + monthName + "| Index: " + monthIndex  + "| arrMonth: " + arrMonth[monthIndex]);
+        Log.e("******","Day: " + day + " | Week: " + day/7 + " | arrWeek: " + arrWeek[weekIndex]);
         Log.e("******","Hour: " + hr);
-        //int days = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+
     }
 
-    private void tempSequence(Float temp){
-        Log.e("MAIN", "temp reveived " + temp + "°C");
+    private void makeCorrectRef() {
+        Log.e(TAG, "makeCorrectRef: ..................");
+        String seqStr = null, weekStr=null;
 
         if ((hr>7) && (hr<18)){
-            String SeqStr = "Winter/" + monthName + "/SeqDay";
-            seqRef = FirebaseDatabase.getInstance().getReference(SeqStr);
+            seqStr = "Winter/" + monthName + "/SeqDay";
+            seqRef = FirebaseDatabase.getInstance().getReference(seqStr);
+
             if(hr==8){
-                seqRef.setValue(String.valueOf(temp));
+                work="write";
             }
             else if((hr==11)|| (hr==14)){
-                //actionNeeded="readwrite";//read...put , and write after concat
-                readWriteSeq(seqRef,"regular",temp,null,null);
+                work="readwrite";
             }
             else if(hr==17){
-                if((day/7)<1){readWriteSeq(seqRef,"last4",temp,"Week1","day");}
-                else if((day/7)<2){ readWriteSeq(seqRef,"last4",temp,"Week2","day");}
-                else if((day/7)<3){ readWriteSeq(seqRef,"last4",temp,"Week3","day");}
-                else { readWriteSeq(seqRef,"last4",temp,"Week4","day");}
-
+                weekStr = "Winter/" + monthName + "/" + arrWeek[weekIndex]  + "/day" ;
+                weekRef = FirebaseDatabase.getInstance().getReference(weekStr);
             }
+        }//=====day ends
 
-        }
         else{
-            String SeqStr = "Winter/" + monthName + "/SeqNight";
-            seqRef = FirebaseDatabase.getInstance().getReference(SeqStr);
+            seqStr = "Winter/" + monthName + "/SeqNight";
+            seqRef = FirebaseDatabase.getInstance().getReference(seqStr);
+
             if(hr==20){
-                seqRef.setValue(String.valueOf(temp));
+                work="write";
             }
-            else if((hr==23)|| (hr==2)){
-                if((hr==23) && (day%7==6)){
-                    readWriteSeq(seqRef, "last2", temp, null, null);
-                }
-                else{
-                    readWriteSeq(seqRef, "regular", temp, null, null);
+            else if(hr==23){
+                //read...put , and write after concat
+                work="readwrite";
+            }
+            else if(hr==2){
+                work="readwrite";
+                if(day==1){
+                    //this is a new month..& new week.. but night should be of prev this happens at 2am
+                    seqStr = "Winter/" + arrMonth[monthIndex-1] + "/SeqNight";
+                    seqRef = FirebaseDatabase.getInstance().getReference(seqStr);
                 }
             }
             else if(hr==5){
-                if((day/7)<1){readWriteSeq(seqRef,"last4",temp,"Week1","night");}
-                else if((day/7)<2){ readWriteSeq(seqRef,"last4",temp,"Week2","night");}
-                else if((day/7)<3){ readWriteSeq(seqRef,"last4",temp,"Week3","night");}
-                else { readWriteSeq(seqRef,"last4",temp,"Week4","night");}
+                if(day==1){
+                    //this is a new month..& new week.. but night should be of prev this happens at 2am
+                    seqStr = "Winter/" + arrMonth[monthIndex-1] + "/SeqNight";//put month 1 back
+                    seqRef = FirebaseDatabase.getInstance().getReference(seqStr);
 
+                    weekStr = "Winter/" + arrMonth[monthIndex-1] + "/Week4/night" ;//we can force this to "Week4"
+                    weekRef = FirebaseDatabase.getInstance().getReference(weekStr);
+                }
+                else if((day%7==0) && (day!=28)){
+                    weekStr = "Winter/" + monthName + "/" + arrWeek[weekIndex-1] + "/night" ;//put week 1 back.. but on day 28 dont make it WEEK3!
+                    weekRef = FirebaseDatabase.getInstance().getReference(weekStr);         //cz week4 continues
+                }
+                else{
+                    weekStr = "Winter/" + monthName + "/" + arrWeek[weekIndex]  + "/night" ;
+                    weekRef = FirebaseDatabase.getInstance().getReference(weekStr);
+                }
             }
         }
+
+        Log.e(TAG, "SeqRef: " + seqStr);
+        Log.e(TAG, "WeekRef: " + weekStr);
     }
 
-    private void readWriteSeq(final DatabaseReference seqRef, final String typez, final Float temp, final String week, final String time) {
 
+
+    private void doWork(final float temp) {
+        if(work.equals("write")){
+            seqRef.setValue(String.valueOf(temp));
+        }
+        else{
             seqRef.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     String str = dataSnapshot.getValue(String.class);
-                    seqRef.setValue(str + "," + temp);
-                    if(typez.equals("last4")) {
+                    str = str + "," + temp;
+                    seqRef.setValue(str);
+
+                    if((hr==17) || (hr==5)) {//this is when you need to do weekstuff after readwrite
                         String[] splitz = str.split(",");
                         float sum=0.0f;
                         for(String t : splitz){
                             sum += Float.valueOf(t);
                         }
-                        sum = sum + temp;
                         float avg = sum/4;
-                        weekStuff(week,time,avg);
-                    }
-                    else if(typez.equals("last2")) {
-                        String[] splitz = str.split(",");
-                        float sum=0.0f;
-                        for(String t : splitz){
-                            sum += Float.valueOf(t);
-                        }
-                        sum = sum + temp;
-                        float avg = sum/2;
-                        weekStuff(week,time,avg);
+                        weekStuff(avg);
                     }
 
                 }
@@ -136,12 +170,13 @@ public class MyBroadcastReciever extends BroadcastReceiver {
 
                 }
             });
+        }
+
+
 
     }
 
-    private void weekStuff(String week, String time, final Float avg) {
-        String str = "Winter/" + monthName + "/" + week  + "/" + time ;
-        weekRef = FirebaseDatabase.getInstance().getReference(str);
+    private void weekStuff(final Float avg) {
         weekRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -200,7 +235,7 @@ public class MyBroadcastReciever extends BroadcastReceiver {
                     DecimalFormat df = new DecimalFormat("#.#");
                     Float tempVal = Float.valueOf(temp);
                     temp = df.format(tempVal);//decimalFormatter always returns a String
-                    tempSequence(Float.valueOf(temp));
+                    doWork(Float.valueOf(temp));
                     Log.e("MAIN", "temp: " + temp + "°C");
 
                     Log.e("XXXXX", "xxxxxxxxxxxxxxxxxx");
@@ -226,7 +261,3 @@ public class MyBroadcastReciever extends BroadcastReceiver {
 
 
 }
-//from pc
-
-//1.2+1.1 calc night avg by 2.. then add to week1 night avg and div by 2
-//-1,-2,...day8am=-1

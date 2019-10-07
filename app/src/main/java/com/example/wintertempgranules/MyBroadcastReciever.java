@@ -51,7 +51,7 @@ public class MyBroadcastReciever extends BroadcastReceiver {
         doDateStuff();
         makeCorrectRef();
         //callWebService();
-        doWork(1.5f);
+        //doWork(1.5f);
         Log.e("RECIEVER", "xxxxxxxxx");
     }
 
@@ -63,13 +63,20 @@ public class MyBroadcastReciever extends BroadcastReceiver {
         monthName = new SimpleDateFormat("MMM").format(cal.getTime());
         monthIndex = cal.get(Calendar.MONTH);
 
+
+
         day = cal.get(Calendar.DAY_OF_MONTH);
+        day=1;
         weekIndex = (day/7>3)? 3 : (day/7) ;
 
+
         hr = cal.get(Calendar.HOUR_OF_DAY);
-        Log.e("******","Month: " + monthName + "|Index: " + monthIndex);
+        hr=2;
+
+        Log.e("******","Month: " + monthName + "| Index: " + monthIndex  + "| arrMonth: " + arrMonth[monthIndex]);
         Log.e("******","Day: " + day + " | Week: " + day/7 + " | arrWeek: " + arrWeek[weekIndex]);
         Log.e("******","Hour: " + hr);
+
     }
 
     private void makeCorrectRef() {
@@ -120,9 +127,9 @@ public class MyBroadcastReciever extends BroadcastReceiver {
                     weekStr = "Winter/" + arrMonth[monthIndex-1] + "/Week4/night" ;//we can force this to "Week4"
                     weekRef = FirebaseDatabase.getInstance().getReference(weekStr);
                 }
-                else if(day%7==0){
-                    weekStr = "Winter/" + monthName + "/" + arrWeek[weekIndex-1] + "/night" ;//put week 1 back
-                    weekRef = FirebaseDatabase.getInstance().getReference(weekStr);
+                else if((day%7==0) && (day!=28)){
+                    weekStr = "Winter/" + monthName + "/" + arrWeek[weekIndex-1] + "/night" ;//put week 1 back.. but on day 28 dont make it WEEK3!
+                    weekRef = FirebaseDatabase.getInstance().getReference(weekStr);         //cz week4 continues
                 }
                 else{
                     weekStr = "Winter/" + monthName + "/" + arrWeek[weekIndex]  + "/night" ;
@@ -132,7 +139,7 @@ public class MyBroadcastReciever extends BroadcastReceiver {
         }
 
         Log.e(TAG, "SeqRef: " + seqStr);
-        Log.e(TAG, "SeqRef: " + weekStr);
+        Log.e(TAG, "WeekRef: " + weekStr);
     }
 
 

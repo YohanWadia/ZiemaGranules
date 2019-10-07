@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -52,7 +53,11 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MyBroadcastReciever.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + (10000),60000*60*3, pendingIntent);
+        //alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + (10000),60000*60*3, pendingIntent);
+        //documents say go with below if its interval repeating and not particular time waking up
+        alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() + 10000,
+                60000*60*3, pendingIntent);
 
         Toast.makeText(this, "Alarm Started", Toast.LENGTH_LONG).show();
 

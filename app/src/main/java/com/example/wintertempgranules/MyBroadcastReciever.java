@@ -42,13 +42,14 @@ public class MyBroadcastReciever extends BroadcastReceiver {
 
     String work;//write... read,write... update
 
-    DatabaseReference seqRef,weekRef;
+    DatabaseReference seqRef,weekRef, startEndRef;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.e("RECIEVER", "Alarm =========");
         ctx = context;
         work="";//to avoid null pointer on update
+        startEndRef =  FirebaseDatabase.getInstance().getReference("Winter/zz");
 
         doDateStuff();
         makeCorrectRef();
@@ -69,6 +70,8 @@ public class MyBroadcastReciever extends BroadcastReceiver {
         weekIndex = (day/7>3)? 3 : (day/7) ;
 
         hr = cal.get(Calendar.HOUR_OF_DAY);
+        startEndRef.child(String.valueOf(hr)).setValue(1);
+
 
         Log.e("******","Month: " + monthName + "| Index: " + monthIndex  + "| arrMonth: " + arrMonth[monthIndex]);
         Log.e("******","Day: " + day + " | Week: " + day/7 + " | arrWeek: " + arrWeek[weekIndex]);
@@ -162,6 +165,9 @@ public class MyBroadcastReciever extends BroadcastReceiver {
                         float avg = sum/4;
                         weekStuff(avg);
                     }
+                    else {
+                        startEndRef.child(String.valueOf(hr)).setValue(2);//all others completion tick comes here 17&5 is in weekstuff()
+                    }
 
                 }
 
@@ -195,6 +201,8 @@ public class MyBroadcastReciever extends BroadcastReceiver {
 
                     weekRef.setValue(Float.valueOf(ansStr));
                 }
+            startEndRef.child(String.valueOf(hr)).setValue(2);//put the completion tick
+            clearTicks();
             }
 
             @Override
@@ -203,6 +211,21 @@ public class MyBroadcastReciever extends BroadcastReceiver {
             }
         });
 
+    }
+
+    private void clearTicks() {
+        if(hr==5){
+            startEndRef.child("8").setValue(0);
+            startEndRef.child("11").setValue(0);
+            startEndRef.child("14").setValue(0);
+            startEndRef.child("17").setValue(0);
+        }
+        else if(hr==17){
+            startEndRef.child("20").setValue(0);
+            startEndRef.child("23").setValue(0);
+            startEndRef.child("2").setValue(0);
+            startEndRef.child("5").setValue(0);
+        }
     }
 
 

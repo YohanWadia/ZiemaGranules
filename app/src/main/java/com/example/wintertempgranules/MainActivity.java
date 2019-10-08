@@ -5,35 +5,34 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
+    String TAG = "Main";
 
     DatabaseReference dataRef;
     Spinner spinner;
     TextView textv;
+    ImageView img1,img2,img3,img4,img11,img12,img13,img14;
+    List<Boolean> imgBoolean;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,14 +41,102 @@ public class MainActivity extends AppCompatActivity {
 
         spinner = findViewById(R.id.spinner);
         textv = findViewById(R.id.textView);
+        img1 = findViewById(R.id.imageView1);
+        img2 = findViewById(R.id.imageView2);
+        img3 = findViewById(R.id.imageView3);
+        img4 = findViewById(R.id.imageView4);
+        img11 = findViewById(R.id.imageView11);
+        img12 = findViewById(R.id.imageView12);
+        img13 = findViewById(R.id.imageView13);
+        img14 = findViewById(R.id.imageView14);
+
+
+
+        checkTimes();
+
+
 
         //startAlarm();
         Log.e("onCreate()","xxxxxxxxxxx");
     }
 
+    private void checkTimes() {
+        DatabaseReference zz = FirebaseDatabase.getInstance().getReference("Winter/zz");
+        zz.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                int i=1;
+                for(DataSnapshot ds : dataSnapshot.getChildren()){
+                    int x  = ds.getValue(Integer.class);
+                    if(x==1){
+                      if(i==1){
+                         img1.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                      else if(i==2){
+                          img2.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                      else if(i==3){
+                          img3.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                      else if(i==4){
+                          img4.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                      else if(i==5){
+                          img11.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                      else if(i==6){
+                          img12.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                      else if(i==7){
+                          img13.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                      else if(i==8){
+                          img14.setImageResource(R.drawable.btn_check_buttonless_off);
+                      }
+                    }
+                    else if(x==2){
+                        if(i==1){
+                            img1.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                        else if(i==2){
+                            img2.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                        else if(i==3){
+                            img3.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                        else if(i==4){
+                            img4.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                        else if(i==5){
+                            img11.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                        else if(i==6){
+                            img12.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                        else if(i==7){
+                            img13.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                        else if(i==8){
+                            img14.setImageResource(R.drawable.btn_check_buttonless_on);
+                        }
+                    }
+                    i++;
+                    Log.e(TAG, ds.getKey() + ": " + x +" put in Img" + i);
+                }
+
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
 
 
     public void startAlarm(View v){
+
         Intent intent = new Intent(this, MyBroadcastReciever.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);

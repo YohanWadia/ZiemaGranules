@@ -147,6 +147,7 @@ public class MyBroadcastReciever extends BroadcastReceiver {
     private void doWork(final float temp) {
         if(work.equals("write")){
             seqRef.setValue(String.valueOf(temp));
+            startEndRef.child(String.valueOf(hr)).setValue(2);//tick completion for only 8&20, since "write" ends here
         }
         else{
             seqRef.addListenerForSingleValueEvent(new ValueEventListener() {
